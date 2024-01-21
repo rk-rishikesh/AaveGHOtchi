@@ -11,10 +11,10 @@ const Home: NextPage = () => {
   const [page, setPage] = useState(0);
 
   useEffect(() => {
-    if(isConnected){
+    if (isConnected) {
       setPage(1);
     }
-  })
+  }, [])
 
   return (
     <>
@@ -38,11 +38,11 @@ const Home: NextPage = () => {
             alignItems: 'center',
             justifyContent: 'center',
             height: '100vh',
-            gap:100
+            gap: 100
           }}
         >
           <CardBox page={page}
-          setPage={setPage}/>
+            setPage={setPage} />
         </div>
       </>}
       {page == 2 && <>
@@ -52,11 +52,11 @@ const Home: NextPage = () => {
             alignItems: 'center',
             justifyContent: 'center',
             height: '100vh',
-            gap:100
+            gap: 100
           }}
         >
           <BaseCard page={page}
-          setPage={setPage}/>
+            setPage={setPage} />
         </div>
       </>}
       {page == 3 && <>
@@ -66,11 +66,11 @@ const Home: NextPage = () => {
             alignItems: 'center',
             justifyContent: 'center',
             height: '100vh',
-            gap:100
+            gap: 100
           }}
         >
           <OfferCard page={page}
-          setPage={setPage}/>
+            setPage={setPage} />
         </div>
       </>}
     </>

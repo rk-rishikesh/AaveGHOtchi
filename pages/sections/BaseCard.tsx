@@ -1,4 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { AAVEGOTCHIABI, AAVEGOTCHIADDRESS } from "../constants/Aavagotchi";
+import { ethers } from "ethers";
+import { useAccount } from 'wagmi'
+import { TokenboundClient } from '@tokenbound/sdk'
+import { FACILITATORABI, FACILITATORADDRESS } from "../constants/Facilitator";
 
 interface Props {
     page: number;
@@ -11,27 +16,78 @@ const BaseCard = ({
 }: Props) => {
     const [loading, setLoading] = useState(false);
     const [listed, setListed] = useState(false);
+    const [tokenID, setTokenID] = useState();
+    const [tba, setTba] = useState("");
+    const { address } = useAccount();
 
-    const listAsset = () => {
-        // setLoading(true)
+    useEffect(() => {
+        const init = async () => {
+
+            setLoading(true)
+            const ethereum = await window.ethereum;
+            const signer = await new ethers.BrowserProvider(ethereum).getSigner();
+            console.log(signer)
+
+            const aavegotchi = new ethers.Contract(
+                AAVEGOTCHIADDRESS,
+                AAVEGOTCHIABI,
+                signer
+            );
+            console.log(aavegotchi)
+
+            const userTokenID = await aavegotchi.getUserTokenID(address);
+            console.log(userTokenID);
+            const tokenboundClient = new TokenboundClient({
+                signer,
+                chainId: 80001,
+                implementationAddress: "0x41C8f39463A868d3A88af00cd0fe7102F30E44eC",
+            })
+            const account = await tokenboundClient.getAccount({
+                tokenContract: AAVEGOTCHIADDRESS,
+                tokenId: userTokenID.toString(),
+            })
+            setTba(account);
+            setTokenID(userTokenID.toString())
+
+            setLoading(false)
+        }
+
+        init();
+    }, [])
+
+    const listAsset = async () => {
+        const ethereum = await window.ethereum;
+        const signer = await new ethers.BrowserProvider(ethereum).getSigner();
+        console.log(signer)
+
+        const aavegotchi = new ethers.Contract(
+            AAVEGOTCHIADDRESS,
+            AAVEGOTCHIABI,
+            signer
+        );
+
+        const approve = await aavegotchi.setApprovalForAll(FACILITATORADDRESS, true);
+
+        const facilitator = new ethers.Contract(
+            FACILITATORADDRESS,
+            FACILITATORABI,
+            signer
+        );
+        console.log(facilitator)
+
+        // const list = await facilitator.createBorrowRequest();
+
+        const list = await aavegotchi.transferFrom(address, FACILITATORADDRESS, 1);
 
         setListed(true)
     }
 
-    const handleOffer = () => {
+    const handleOffer = async() => {
         // setLoading(true)
-
         setPage(3)
+        
     }
 
-
-    if (loading) {
-        return (
-            <div>
-
-            </div>
-        )
-    } else {
         return (
             <div className="basecard">
 
@@ -40,7 +96,7 @@ const BaseCard = ({
 
                 </div>
                 <div className="basecard__title">100 USD</div>
-                <div className="basecard__subtitle">0xd877A332B0FACf7BD86b1609a9547279aCF38531</div>
+                <div className="basecard__subtitle">{tba}</div>
                 <div className="basecard__wrapper">
                     <div className="iconcard">
                         <div className="tooltip">
@@ -84,7 +140,7 @@ const BaseCard = ({
                 </div>
             </div>
         );
-    }
+
 
 
 };

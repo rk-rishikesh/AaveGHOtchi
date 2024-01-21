@@ -37,7 +37,7 @@ const CardBox = ({
 
             const userTokenID = await aavegotchi.getUserTokenID(address);
             console.log(userTokenID);
-            setTokenID(userTokenID)
+            setTokenID(userTokenID.toString())
 
             setLoading(false)
         }
@@ -79,7 +79,7 @@ const CardBox = ({
 
         console.log("IS ACCOUNT DEPLOYED?", isAccountDeployed)
 
-        if (isAccountDeployed) {
+        if (!isAccountDeployed) {
             const createdAccount = await tokenboundClient.createAccount({
                 tokenContract: AAVEGOTCHIADDRESS,
                 tokenId: userTokenID.toString(),
@@ -92,13 +92,11 @@ const CardBox = ({
 
     }, [])
 
-
     const handleEnter = () => {
         // setLoading(true)
-
+        console.log("ENTER")
         setPage(2)
     }
-
 
     if (loading) {
         return (
@@ -143,7 +141,7 @@ const CardBox = ({
                         evolve ?
                             <>
                                 <div className="infotop">
-                                    <div className="name">Token ID #21</div>
+                                    <div className="name">Token ID #{tokenID}</div>
                                     <div
                                         style={{
                                             display: 'flex',
@@ -158,7 +156,7 @@ const CardBox = ({
                             </> :
                             <>
                                 <div className="leftinfotop">
-                                    <div className="leftname">Token ID #21</div>
+                                    <div className="leftname">Token ID #{tokenID}</div>
                                     <div
                                         style={{
                                             display: 'flex',
