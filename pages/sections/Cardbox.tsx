@@ -1,22 +1,96 @@
 import { useState } from "react";
+import { TokenboundClient } from '@tokenbound/sdk'
+import { useAccount } from 'wagmi'
+import { useCallback, useEffect } from 'react'
+import { AAVEGOTCHIABI, AAVEGOTCHIADDRESS } from "../constants/Aavagotchi";
+import { ethers } from "ethers";
 
 interface Props {
     page: number;
     setPage: (arg0: number) => void;
-  }
+}
 
 const CardBox = ({
     page,
     setPage,
-  }: Props) => {
+}: Props) => {
+
+    const { isConnected, address } = useAccount();
+    const [tokenID, setTokenID] = useState();
     const [loading, setLoading] = useState(false);
     const [evolve, setEvolve] = useState(false);
 
-    const createTBA = () => {
-        // setLoading(true)
+    useEffect(() => {
+        const init = async () => {
 
+            setLoading(true)
+            const ethereum = await window.ethereum;
+            const signer = await new ethers.BrowserProvider(ethereum).getSigner();
+            console.log(signer)
+
+            const aavegotchi = new ethers.Contract(
+                AAVEGOTCHIADDRESS,
+                AAVEGOTCHIABI,
+                signer
+            );
+            console.log(aavegotchi)
+
+            const userTokenID = await aavegotchi.getUserTokenID(address);
+            console.log(userTokenID);
+            setTokenID(userTokenID)
+
+            setLoading(false)
+        }
+
+        init();
+    }, [])
+
+    const createTBA = useCallback(async () => {
+        setLoading(true)
+        const ethereum = await window.ethereum;
+        const signer = await new ethers.BrowserProvider(ethereum).getSigner();
+        console.log(signer)
+
+        const tokenboundClient = new TokenboundClient({
+            signer,
+            chainId: 80001,
+            implementationAddress: "0x41C8f39463A868d3A88af00cd0fe7102F30E44eC",
+        })
+
+        if (!tokenboundClient || !address) return
+        const aavegotchi = new ethers.Contract(
+            AAVEGOTCHIADDRESS,
+            AAVEGOTCHIABI,
+            signer
+        );
+        console.log(aavegotchi)
+
+        const userTokenID = await aavegotchi.getUserTokenID(address);
+        console.log(userTokenID);
+
+        const account = await tokenboundClient.getAccount({
+            tokenContract: AAVEGOTCHIADDRESS,
+            tokenId: userTokenID.toString(),
+        })
+
+        const isAccountDeployed = await tokenboundClient.checkAccountDeployment({
+            accountAddress: account,
+        })
+
+        console.log("IS ACCOUNT DEPLOYED?", isAccountDeployed)
+
+        if (isAccountDeployed) {
+            const createdAccount = await tokenboundClient.createAccount({
+                tokenContract: AAVEGOTCHIADDRESS,
+                tokenId: userTokenID.toString(),
+            })
+            console.log(createdAccount);
+        }
+
+        setLoading(false)
         setEvolve(true)
-    }
+
+    }, [])
 
 
     const handleEnter = () => {
@@ -30,7 +104,6 @@ const CardBox = ({
         return (
             <div>
                 <div className="e-card playing">
-                    <div className="image"></div>
 
                     <div className="wave"></div>
                     <div className="wave"></div>
@@ -60,7 +133,7 @@ const CardBox = ({
         return (
             <div>
                 <div className="e-card playing">
-                    <div className="image"></div>
+                    {/* <div className="image"></div> */}
 
                     <div className="wave"></div>
                     <div className="wave"></div>
@@ -96,7 +169,7 @@ const CardBox = ({
                                         <img style={{ width: "40%" }} src="https://app.aavegotchi.com/images/aavegotchialpha.png" />
 
                                     </div>
-                                    <button className="magicbutton" onClick={createTBA}>E V O L V E</button>
+                                    <button className="magicbutton" onClick={createTBA}>&nbsp;&nbsp;E V O L V E&nbsp;&nbsp;</button>
                                 </div>
                             </>
                     }
@@ -112,7 +185,7 @@ const CardBox = ({
                         justifyContent: 'center',
                     }}
                 >
-                    <button className="magicbutton" onClick={handleEnter}>E N T E R</button>
+                    <button className="magicbutton" onClick={handleEnter}>&nbsp;&nbsp;E N T E R&nbsp;&nbsp;</button>
                 </div>}
             </div>
         );
